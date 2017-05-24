@@ -54,7 +54,7 @@ die "can't make output directory: $outdir\n" unless (-d $outdir);
 #
 #
 
-my @s_samples = ( ['Source Name', 'Sample Name', 'Description','Material Type', 'Term Source Ref', 'Term Accession Number', 'Characteristics [sex (EFO:0000695)]', 'Term Source Ref', 'Term Accession Number', 'Characteristics [developmental stage (EFO:0000399)]', 'Term Source Ref', 'Term Accession Number', 'Characteristics [sample size (VBcv:0000983)]','Characteristics [combined feeding and gonotrophic status of insect (VSMO:0002038)]','Term Source Ref', 'Term Accession Number' ] );
+my @s_samples = ( ['Source Name', 'Sample Name', 'Description','Material Type', 'Term Source Ref', 'Term Accession Number', 'Characteristics [sex (EFO:0000695)]', 'Term Source Ref', 'Term Accession Number', 'Characteristics [developmental stage (EFO:0000399)]', 'Term Source Ref', 'Term Accession Number', 'Characteristics [sample size (VBcv:0000983)]' ] );
 
 
 my @a_species = ( [ 'Sample Name', 'Assay Name', 'Description', 'Protocol REF', 'Characteristics [species assay result (VBcv:0000961)]', 'Term Source Ref', 'Term Accession Number' ] );
@@ -104,15 +104,15 @@ foreach my $filename (glob "$indir/*.{txt,tsv}") {
       my $sample_count = $row->{"$genus SUM"};
 	#$genus eq 'ANOPHELES' ? $row->{"ANOPHELES SUM"} : $genus eq 'AEDES' ? $row->{"AEDES SUM"} : $row->{"CULEX SUM"};
 
-      my $sample_name = whitespace_to_underscore(
-						 sprintf "%s.%s.%s.%03d",
-						 $genus,
-						 $row->{CLUSTERS},
-						 $row->{"SOURCE"},
-						 ++$sample_number{$genus}{$row->{CLUSTERS}}{$row->{"SOURCE"}} # Perl automatically fills previously non-existent hash values with zero before doing any maths on them
-						);
+      my $sample_name = tidy_up_name(
+				     sprintf "%s.%s.%s.%03d",
+				     $genus,
+				     $row->{CLUSTERS},
+				     $row->{"SOURCE"},
+				     ++$sample_number{$genus}{$row->{CLUSTERS}}{$row->{"SOURCE"}} # Perl automatically fills previously non-existent hash values with zero before doing any maths on them
+				    );
 
-      print "Made a sample (count $sample_count) '$sample_name' from date '$row->{Date}'\n";
+      # print "Made a sample (count $sample_count) '$sample_name' from date '$row->{Date}'\n";
 
 # $x = 7
 # print ++$x
@@ -124,13 +124,13 @@ foreach my $filename (glob "$indir/*.{txt,tsv}") {
 
       # create collection assay name
       #To make my assay names for collection
-      my $a_collection_assay_name = $collection_name{$row->{CLUSTERS}}{$row->{Date}}{$row->{'SOURCE'}}{$row->{"SENTINEL/RANDOM"}} //= whitespace_to_underscore(sprintf "%s.%s.%s.%s.%04d", $row->{CLUSTERS}, $row->{Date}, $row->{'SOURCE'}, ($row->{"SENTINEL/RANDOM"} || 'X'), $collection_counter++);
+      my $a_collection_assay_name = $collection_name{$row->{CLUSTERS}}{$row->{Date}}{$row->{'SOURCE'}}{$row->{"SENTINEL/RANDOM"} || 'X'} //= tidy_up_name(sprintf "%s.%s.%s.%s.%04d", $row->{CLUSTERS}, $row->{Date}, $row->{'SOURCE'}, ($row->{"SENTINEL/RANDOM"} || ''), $collection_counter++);
 
 
 
       push @a_species, [ $sample_name, "$sample_name.SPECIES", '', 'SPECIES', morpho_species_term($genus) ];
 
-      push @a_collection, [ $sample_name, $a_collection_assay_name, , $row->{Date}, 'Chennai', 'GAZ', '00003776', '1', $row->{LATITUDE}, $row->{LONGITUDE}, 'IA', $row->{CLUSTERS}, 'India' ];
+      push @a_collection, [ $sample_name, $a_collection_assay_name, , fix_date($row->{Date}), 'Chennai', 'GAZ', '00003776', '1', $row->{LATITUDE}, $row->{LONGITUDE}, 'IA', $row->{CLUSTERS}, 'India' ];
 
       push @s_samples, [ '2017-icemr-chennai', $sample_name, '', 'pool', 'EFO', '0000663', 'mixed sex', 'PATO', '0001338', 'F0 larvae;pupa', 'MIRO;IDOMAL', '30000028;0000654', $row->{"$genus SUM"} ];
     }
@@ -164,13 +164,13 @@ sub morpho_species_term {
   my $input = shift;
   given ($input) {
     when (/^ANOPHELES$/) {
-      return ('Anopheles', 'VBsp', '0000016')
+      return ('genus Anopheles', 'VBsp', '0000015')
     }
     when (/^CULEX$/) {
-      return ('Culex', 'VBsp', '0002482')
+      return ('genus Culex', 'VBsp', '0002423')
     }
     when (/^AEDES$/) {
-      return ('Aedes', 'VBsp', '0000254')
+      return ('genus Aedes', 'VBsp', '0000253')
     }
     default {
       die "fatal error: unknown morpho_species_term >$input<\n";
@@ -269,8 +269,16 @@ sub write_table {
   warn "sucessfully wrote $filename\n";
 }
 
-sub whitespace_to_underscore {
+sub tidy_up_name {
   my ($input) = @_;
   $input =~ s/\s+/_/g;
+  # replace dot dot with dot
+  $input =~ s/\.+/./g;
+  return $input;
+}
+
+sub fix_date {
+  my ($input) = @_;
+  $input =~ s|/|-|g;
   return $input;
 }
