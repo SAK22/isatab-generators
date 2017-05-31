@@ -59,7 +59,7 @@ my @s_samples = ( ['Source Name', 'Sample Name', 'Description','Material Type', 
 
 my @a_species = ( [ 'Sample Name', 'Assay Name', 'Description', 'Protocol REF', 'Characteristics [species assay result (VBcv:0000961)]', 'Term Source Ref', 'Term Accession Number' ] );
 
-my @a_collection = ( [ 'Sample Name', 'Assay Name', 'Date', 'Characteristics [Collection site (VBcv:0000831)]', 'Term Source Ref', 'Term Accession Number', 'Characteristics [collection duration in days (VBcv:0001009)]', 'Characteristics [Collection site latitude (VBcv:0000817)]', 'Characteristics [Collection site longitude (VBcv:0000816)]', 'Comment [collection site coordinates]', 'Characteristics [Collection site village (VBcv:0000829)]', 'Characteristics [Collection site country (VBcv:0000701)]' ] ); # 'Characteristics [Collection site location (VBcv:0000698)]', 'Characteristics [Collection site village (VBcv:0000829)]', 'Characteristics [Collection site locality (VBcv:0000697)]', 'Characteristics [Collection site suburb (VBcv:0000845)]', 'Characteristics [Collection site city (VBcv:0000844)]', 'Characteristics [Collection site county (VBcv:0000828)]', 'Characteristics [Collection site district (VBcv:0000699)]', 'Characteristics [Collection site province (VBcv:0000700)]', 'Characteristics [Collection site country (VBcv:0000701)]' ] );
+my @a_collection = ( [ 'Sample Name', 'Assay Name', 'Protocol REF', 'Date', 'Characteristics [Collection site (VBcv:0000831)]', 'Term Source Ref', 'Term Accession Number', 'Characteristics [collection duration in days (VBcv:0001009)]', 'Characteristics [Collection site latitude (VBcv:0000817)]', 'Characteristics [Collection site longitude (VBcv:0000816)]', 'Comment [collection site coordinates]', 'Characteristics [Collection site village (VBcv:0000829)]', 'Characteristics [Collection site country (VBcv:0000701)]' ] ); # 'Characteristics [Collection site location (VBcv:0000698)]', 'Characteristics [Collection site village (VBcv:0000829)]', 'Characteristics [Collection site locality (VBcv:0000697)]', 'Characteristics [Collection site suburb (VBcv:0000845)]', 'Characteristics [Collection site city (VBcv:0000844)]', 'Characteristics [Collection site county (VBcv:0000828)]', 'Characteristics [Collection site district (VBcv:0000699)]', 'Characteristics [Collection site province (VBcv:0000700)]', 'Characteristics [Collection site country (VBcv:0000701)]' ] );
 
 
 
@@ -112,6 +112,7 @@ foreach my $filename (glob "$indir/*.{txt,tsv}") {
 				     ++$sample_number{$genus}{$row->{CLUSTERS}}{$row->{"SOURCE"}} # Perl automatically fills previously non-existent hash values with zero before doing any maths on them
 				    );
 
+
       # print "Made a sample (count $sample_count) '$sample_name' from date '$row->{Date}'\n";
 
 # $x = 7
@@ -126,11 +127,10 @@ foreach my $filename (glob "$indir/*.{txt,tsv}") {
       #To make my assay names for collection
       my $a_collection_assay_name = $collection_name{$row->{CLUSTERS}}{$row->{Date}}{$row->{'SOURCE'}}{$row->{"SENTINEL/RANDOM"} || 'X'} //= tidy_up_name(sprintf "%s.%s.%s.%s.%04d", $row->{CLUSTERS}, $row->{Date}, $row->{'SOURCE'}, ($row->{"SENTINEL/RANDOM"} || ''), $collection_counter++);
 
-
-
+      my $collection_protocol_ref = collection_protocol_ref($row->{'SOURCE'});
       push @a_species, [ $sample_name, "$sample_name.SPECIES", '', 'SPECIES', morpho_species_term($genus) ];
 
-      push @a_collection, [ $sample_name, $a_collection_assay_name, , fix_date($row->{Date}), 'Chennai', 'GAZ', '00003776', '1', $row->{LATITUDE}, $row->{LONGITUDE}, 'IA', $row->{CLUSTERS}, 'India' ];
+      push @a_collection, [ $sample_name, $a_collection_assay_name, $collection_protocol_ref, fix_date($row->{Date}), 'Chennai', 'GAZ', '00003776', '1', $row->{LATITUDE}, $row->{LONGITUDE}, 'IA', $row->{CLUSTERS}, 'India' ];
 
       push @s_samples, [ '2017-icemr-chennai', $sample_name, '', 'pool', 'EFO', '0000663', 'mixed sex', 'PATO', '0001338', 'F0 larvae;pupa', 'MIRO;IDOMAL', '30000028;0000654', $row->{"$genus SUM"} ];
     }
@@ -202,15 +202,18 @@ sub pcr_species_term {
 sub collection_protocol_ref {
   my $input = shift;
   given ($input) {
-    when (/^HD$/) {
-      return ('COLL_HOUSE')
+    when (/^OTHER$/) {
+      return ('COLL_CISTERN')
     }
-    when (/^CS$/) {
-      return ('COLL_CATTLE')
+    when (/^WELL$/) {
+      return ('COLL_WELL')
+    }
+    when (/^OHT$/) {
+      return ('COLL_OHT')
     }
     default {
       die "fatal error: unknown protocol_ref >$input<\n";
-      }
+    }
   }
 }
 
