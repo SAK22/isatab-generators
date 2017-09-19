@@ -19,7 +19,7 @@ use Geo::Coordinates::UTM;
 
 my %parser_defaults = (binary => 1, eol => $/, sep_char => "\t");
 
-my $inputfile = '/home/sakelly/source-data/aedes-microsat/Gloria Soria.txt.txt';
+my $inputfile = '/home/sakelly/vectorbase/popbio/isatab-generators/aedes-microsats/data/VBDATA-229/Kotsakiozi.txt';
 
 GetOptions(
 	   "inputfile=s"=>\$inputfile,
@@ -61,7 +61,7 @@ foreach my $row_ref (@$lines_aoh) {
       # printf prints a formatted 'template' string
       # the variable values follow it
       if ($length > 0 && !$done_locus{$locus}++) {
-	printf "%s\t%s.%s\tMICRO_PCR\t\t\t\tg_microsat.txt\n", $sample_id, $sample_id, $locus;
+	printf "%s\t%s.%s\tGENOTYPE\t\t\t\tg_microsat.txt\n", $sample_id, $sample_id, $locus;
       }
     }
   } else {
