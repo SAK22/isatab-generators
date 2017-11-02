@@ -104,7 +104,7 @@ my @s_samples = ( ['Source Name', 'Sample Name', 'Description','Material Type', 
 
 my @a_species = ( [ 'Sample Name', 'Assay Name', 'Description', 'Protocol REF', 'Characteristics [species assay result (VBcv:0000961)]', 'Term Source Ref', 'Term Accession Number' ] );
 
-my @a_collection = ( [ 'Sample Name', 'Assay Name', 'Description', 'Protocol REF', 'Performer', 'Date', 'Characteristics [Collection site (VBcv:0000831)]', 'Term Source Ref', 'Term Accession Number', 'Characteristics [Collection site latitude (VBcv:0000817)]', 'Characteristics [Collection site longitude (VBcv:0000816)]', 'Comment [collection site coordinates]', 'Characteristics [Collection site village (VBcv:0000829)]', 'Characteristics [Collection site country (VBcv:0000701)]' ] ); # 'Characteristics [Collection site location (VBcv:0000698)]', 'Characteristics [Collection site village (VBcv:0000829)]', 'Characteristics [Collection site locality (VBcv:0000697)]', 'Characteristics [Collection site suburb (VBcv:0000845)]', 'Characteristics [Collection site city (VBcv:0000844)]', 'Characteristics [Collection site county (VBcv:0000828)]', 'Characteristics [Collection site district (VBcv:0000699)]', 'Characteristics [Collection site province (VBcv:0000700)]', 'Characteristics [Collection site country (VBcv:0000701)]' ] );
+my @a_collection = ( [ 'Sample Name', 'Assay Name', 'Description', 'Protocol REF', 'Performer', 'Date', 'Characteristics [Collection site (VBcv:0000831)]', 'Term Source Ref', 'Term Accession Number', 'Characteristics [collection duration in days (VBcv:0001009)]', 'Characteristics [Collection site latitude (VBcv:0000817)]', 'Characteristics [Collection site longitude (VBcv:0000816)]', 'Comment [collection site coordinates]', 'Characteristics [Collection site village (VBcv:0000829)]', 'Characteristics [Collection site country (VBcv:0000701)]' ] ); # 'Characteristics [Collection site location (VBcv:0000698)]', 'Characteristics [Collection site village (VBcv:0000829)]', 'Characteristics [Collection site locality (VBcv:0000697)]', 'Characteristics [Collection site suburb (VBcv:0000845)]', 'Characteristics [Collection site city (VBcv:0000844)]', 'Characteristics [Collection site county (VBcv:0000828)]', 'Characteristics [Collection site district (VBcv:0000699)]', 'Characteristics [Collection site province (VBcv:0000700)]', 'Characteristics [Collection site country (VBcv:0000701)]' ] );
 
 my @a_blood_species = ( [ 'Sample Name', 'Assay Name', 'Protocol REF', 'Raw Data File' ] );
 my @p_blood_species = ( [ 'Assay Name', 'Phenotype Name', 'Observable', 'Term Source Ref', 'Term Accession Number', 'Attribute', 'Term Source Ref', 'Term Accession Number', 'Value', 'Term Source Ref', 'Term Accession Number' ] );
@@ -221,7 +221,7 @@ foreach my $row (@combined_input_rows) {
 
       push @a_species, [ $sample_name, "$sample_name.SPECIES", '', 'SPECIES', morpho_species_term($row->{Species}) ];
       push @a_species, [ $sample_name, "$sample_name.$species_protocol_ref" , '', $species_protocol_ref, pcr_species_term($subspecies) ];
-      push @a_collection, [ $sample_name, $a_collection_assay_name, '', collection_protocol_ref($row->{'Type of Dwelling'}), '', $row->{Month}, 'India', 'GAZ', '00002839', $lat_decimal, $long_decimal, 'IA', $row->{Village}, 'India' ];
+      push @a_collection, [ $sample_name, $a_collection_assay_name, '', collection_protocol_ref($row->{'Type of Dwelling'}), '', $row->{Month}, 'India', 'GAZ', '00002839', '1', $lat_decimal, $long_decimal, 'IA', $row->{Village}, 'India' ];
 
       if ($bm_type ne 'Unfed') {
 	# always two assays on fed insects
@@ -274,7 +274,7 @@ foreach my $row (@combined_input_rows) {
       push @s_samples, [ '2016-indian-icemr', $sample_name, 'Zero specimens collected', 'pool', 'EFO', '0000663', 'female', 'PATO', '0000383', 'adult', 'IDOMAL', '0000655', '0', '', '', '' ];
       push @a_species, [ $sample_name, "$sample_name.SPECIES", '', 'SPECIES', morpho_species_term($row->{Species}) ];
       push @a_species, [ $sample_name, "$sample_name.$species_protocol_ref" , '', $species_protocol_ref, pcr_species_term($subspecies) ];
-      push @a_collection, [ $sample_name, $a_collection_assay_name, '', collection_protocol_ref($row->{'Type of Dwelling'}), '', $row->{Month}, 'India', 'GAZ', '00002839', $lat_decimal, $long_decimal, 'IA', $row->{Village}, 'India' ];
+      push @a_collection, [ $sample_name, $a_collection_assay_name, '', collection_protocol_ref($row->{'Type of Dwelling'}), '', $row->{Month}, 'India', 'GAZ', '00002839', '1', $lat_decimal, $long_decimal, 'IA', $row->{Village}, 'India' ];
     }
   }
 
