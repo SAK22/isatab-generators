@@ -2,7 +2,7 @@
 #  -*- mode: CPerl -*-
 
 #
-# usage ./generate-p_microsat.pl [ -inputfile filename ] > p_microsat.txt
+# usage ./generate-g_microsat.pl [ -inputfile filename ] > g_microsat.txt
 #
 
 
@@ -18,7 +18,7 @@ use Geo::Coordinates::UTM;
 
 my %parser_defaults = (binary => 1, eol => $/, sep_char => "\t");
 
-my $inputfile = '/home/sakelly/source-data/aedes-microsat/Gloria Soria.txt.txt';
+my $inputfile = '/home/sakelly/vectorbase/popbio/isatab-generators/aedes-microsats/data/VBDATA-250/Saarman.txt';
 
 GetOptions(
 	   "inputfile=s"=>\$inputfile,

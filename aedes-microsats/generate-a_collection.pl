@@ -56,8 +56,8 @@ my $lines_aoh = Text::CSV::Hashify->new( {
 # this loop processes every line in the file
 foreach my $row_ref (@$lines_aoh) {
   my $sample_id = $row_ref->{"Sample ID"};
-  my $population = $row_ref->{Population};
-  my $country = $row_ref->{Country};
+  my $population = quotemeta($row_ref->{Population});
+  my $country = quotemeta($row_ref->{Country});
   my $year = $row_ref->{Year};
 
   if (defined $sample_id) {
@@ -73,6 +73,7 @@ foreach my $row_ref (@$lines_aoh) {
     $year //= 'NOYEAR';
     my $num_matches = @matches;
 
+   # print "$sample_id has $num_matches matches for >$year< >$population< >$country<\n";
 
     if ($num_matches == 1) {
       my $output_line = shift @matches;
