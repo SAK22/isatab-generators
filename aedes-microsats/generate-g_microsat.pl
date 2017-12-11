@@ -18,7 +18,7 @@ use Geo::Coordinates::UTM;
 
 my %parser_defaults = (binary => 1, eol => $/, sep_char => "\t");
 
-my $inputfile = '/home/sakelly/vectorbase/popbio/isatab-generators/aedes-microsats/data/VBDATA-250/Saarman.txt';
+my $inputfile = '/home/sakelly/vectorbase/popbio/isatab-generators/aedes-microsats/data/VBDATA-281/DC_micro.txt.txt';
 
 GetOptions(
 	   "inputfile=s"=>\$inputfile,
@@ -48,7 +48,7 @@ print "Assay Name\tGenotype Name\tDescription\tType\tTerm Source Ref\tTerm Acces
 
 # this loop processes every line in the file
 foreach my $row_ref (@$lines_aoh) {
-  my $sample_id = $row_ref->{"Sample ID"};
+  my $sample_id = $row_ref->{"ID"};
   if (defined $sample_id) {
 
     # now do every allele
