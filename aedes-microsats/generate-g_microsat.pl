@@ -18,7 +18,7 @@ use Geo::Coordinates::UTM;
 
 my %parser_defaults = (binary => 1, eol => $/, sep_char => "\t");
 
-my $inputfile = '/home/sakelly/vectorbase/popbio/isatab-generators/aedes-microsats/data/VBDATA-281/DC_micro.txt.txt';
+my $inputfile = '/home/sakelly/vectorbase/popbio/isatab-generators/aedes-microsats/data/VBDATA-281/DC_micro_VB.txt.txt';
 
 GetOptions(
 	   "inputfile=s"=>\$inputfile,
