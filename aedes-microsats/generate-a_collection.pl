@@ -55,17 +55,19 @@ my $lines_aoh = Text::CSV::Hashify->new( {
 
 # this loop processes every line in the file
 foreach my $row_ref (@$lines_aoh) {
-  my $sample_id = $row_ref->{"Sample ID"};
+  my $sample_id = $row_ref->{ID};
   my $population = quotemeta($row_ref->{Population});
-  my $country = quotemeta($row_ref->{Country});
-  my $year = $row_ref->{Year};
+  my $country = $row_ref->{Country};
+  $country = quotemeta($country) if (defined $country);
+
+  my $year = $row_ref->{"Year Collected"};
 
   if (defined $sample_id) {
     # search for the unique line in @collection_templates that matches population, country and year
 
     my @matches = grep {
       (!defined $year || /$year/) &&
-	/$country/ &&
+	(!defined $country || /$country/) &&
 	  /$population/
     } @collection_templates;
 
@@ -80,11 +82,12 @@ foreach my $row_ref (@$lines_aoh) {
       $output_line =~ s/^[^\t]+/$sample_id/;
 
       print $output_line;
+    } else {
+      warn "no unique row found in collection template for $sample_id $population $country year($year)\n";
     }
 
-
   } else {
-    print "problem reading row\n";
+    warn "problem reading row\n";
   }
 }
 
