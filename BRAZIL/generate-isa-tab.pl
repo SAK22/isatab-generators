@@ -113,9 +113,9 @@ foreach my $filename (glob "$indir/*.{txt,tsv}") {
 
     # create collection assay name
     #To make my assay names for collection
+    my ($hours) = $row->{"Duration"} =~ /(\d+)/;
     my $dt_sample_size = $row->{"No. Mosquitoes"}/2;
     my $assay_protocol_ref = assay_protocol_ref( $row->{"Protocol"} );
-    my $insecticide_term = insecticide_term( $row->{"Insecticide"} );
     my $collection_protocol_ref = 'COLL_OVI';
     my $collection_date = $row->{"Collection date"};
     my $a_collection_assay_name = $collection_name{$row->{"Collection site"}}{$row->{"Collection date"}} {$collection_protocol_ref} //= tidy_up_name(sprintf "%s.%s.%s", $row->{"Collection site"}, $row->{"Collection date"}, $collection_protocol_ref);
@@ -127,9 +127,9 @@ foreach my $filename (glob "$indir/*.{txt,tsv}") {
 
     push @s_samples, [ $row->{"Source of the data"}, $sample_name, '', 'pool', 'EFO', '0000663', 'female', 'PATO', '0000383', dev_stage($row->{"Mosquitoes tested"}), $dt_sample_size ];
 
-    push @a_IR_WHO, [ $sample_name, $a_who_dt_assay_name, $assay_protocol_ref, $insecticide_term, $row->{"Concentration"}, 'percent', 'UO', '0000187', $row->{"Duration"}, 'hour', 'UO', '0000032', $dt_sample_size, 'p_IR_WHO.txt' ];
+    push @a_IR_WHO, [ $sample_name, $a_who_dt_assay_name, $assay_protocol_ref, insecticide_term($row->{"Insecticide"}), $row->{"Concentration"}, 'percent', 'UO', '0000187', $row->{"Duration"}, 'hour', 'UO', '0000032', $dt_sample_size, 'p_IR_WHO.txt' ];
 
-    push @p_IR_WHO, [ $a_who_dt_assay_name, "Mortality percentage:$row->{'Percent mortality'},$row->{'Concentration'}% $insecticide_term", 'insecticide resistance', 'MIRO', '00000021', 'mortality rate', 'VBcv', '0000703', 'IA', $row->{"Percent mortality"}, 'percent', 'UO', '0000187'];
+    push @p_IR_WHO, [ $a_who_dt_assay_name, "Mortality percentage:$row->{'Percent mortality'},$row->{'Concentration'}% insecticide_term($row->{'Insecticide'})", 'insecticide resistance', 'MIRO', '00000021', 'mortality rate', 'VBcv', '0000703', 'IA', $row->{"Percent mortality"}, 'percent', 'UO', '0000187'];
   }
  }
 
@@ -238,6 +238,25 @@ sub insecticide_term {
     }
     default {
 die "fatal error: unknown insecticide >$input<\n";
+    }
+  }
+}
+
+sub duration_and_units {
+  my $input = shift;
+  my ($duration, $unit_abbrev) = $input =~ /(\d+)\s*(\w+)/;
+  given ($input) {
+    when (/^WHO ?1981 ?bioassay$/i) {
+      return ('', '', '', '')
+    }
+    when (/^WHO ?2016 ?bioassay$/i) {
+      return ('', '', '', '')
+    }
+    when (/^CDC ?bottle ?assay$/i) {
+      return ('', '', '', '')
+    }
+    default {
+die "missing unit abbreviation in '$input' duration" unless (defined $unit_abbreviation);
     }
   }
 }
