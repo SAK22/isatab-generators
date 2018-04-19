@@ -113,23 +113,22 @@ foreach my $filename (glob "$indir/*.{txt,tsv}") {
 
     # create collection assay name
     #To make my assay names for collection
-    my $duration_and_units = $row->{"Duration"} =~ /(\d+)\s*(\w+)/;
-    my $dt_sample_size = $row->{"No. Mosquitoes"}/2;
     my $assay_protocol_ref = assay_protocol_ref( $row->{"Protocol"} );
+    my $insecticide = insecticide( $row->{"Insecticide"} );
     my $collection_protocol_ref = 'COLL_OVI';
     my $collection_date = $row->{"Collection date"};
     my $a_collection_assay_name = $collection_name{$row->{"Collection site"}}{$row->{"Collection date"}} {$collection_protocol_ref} //= tidy_up_name(sprintf "%s.%s.%s", $row->{"Collection site"}, $row->{"Collection date"}, $collection_protocol_ref);
-    my $a_who_dt_assay_name = $who_dt_name{$sample_name} {$assay_protocol_ref} {$row->{"Insecticide"}} //= tidy_up_name(sprintf "%s.%s.%s", $sample_name, $assay_protocol_ref, $row->{"Insecticide"});
+    my $a_who_dt_assay_name = $who_dt_name{$sample_name} {$assay_protocol_ref} {$insecticide} //= tidy_up_name(sprintf "%s.%s.%s", $sample_name, $assay_protocol_ref, $insecticide);
 
     push @a_species, [ $sample_name, "$sample_name.SPECIES", '', 'SPECIES', 'Aedes aegypti', 'VBsp', '0000518' ];
 
     push @a_collection, [ $sample_name, $a_collection_assay_name, $collection_protocol_ref, "$collection_date-11/$collection_date-12", 'Brazil', 'GAZ', '00002828', $row->{'Coordinates lat'}, $row->{'Coordinates long'}, 'IA', $row->{'Collection site'}, 'Brazil' ];
 
-    push @s_samples, [ $row->{"Source of the data"}, $sample_name, '', 'pool', 'EFO', '0000663', 'female', 'PATO', '0000383', dev_stage($row->{"Mosquitoes tested"}), $dt_sample_size ];
+    push @s_samples, [ $row->{"Source of the data"}, $sample_name, '', 'pool', 'EFO', '0000663', 'female', 'PATO', '0000383', dev_stage($row->{"Mosquitoes tested"}), $row->{"No. Mosquitoes"} ];
 
-    push @a_IR_WHO, [ $sample_name, $a_who_dt_assay_name, $assay_protocol_ref, insecticide_term($row->{"Insecticide"}), $row->{"Concentration"}, 'percent', 'UO', '0000187', $duration_and_units, $dt_sample_size, 'p_IR_WHO.txt' ];
+    push @a_IR_WHO, [ $sample_name, $a_who_dt_assay_name, $assay_protocol_ref, $insecticide, $row->{"Concentration"}, 'percent', 'UO', '0000187', $row->{"Duration"}, 'hour', 'UO', '0000032', $row->{"No. Mosquitoes"}, 'p_IR_WHO.txt' ];
 
-    push @p_IR_WHO, [ $a_who_dt_assay_name, "Mortality percentage:$row->{'Percent mortality'},$row->{'Concentration'}% insecticide_term($row->{'Insecticide'})", 'insecticide resistance', 'MIRO', '00000021', 'mortality rate', 'VBcv', '0000703', 'IA', $row->{"Percent mortality"}, 'percent', 'UO', '0000187'];
+    push @p_IR_WHO, [ $a_who_dt_assay_name, "Mortality percentage:$row->{'Percent mortality'},$row->{'Concentration'}% $insecticide", 'insecticide resistance', 'MIRO', '00000021', 'mortality rate', 'VBcv', '0000703', 'IA', $row->{"Percent mortality"}, 'percent', 'UO', '0000187'];
   }
  }
 
@@ -200,7 +199,7 @@ die "fatal error: unknown who_protocol_ref >$input<\n";
   }
 }
 
-sub insecticide_term {
+sub insecticide {
   my $input = shift;
   given ($input) {
     when (/^pyriproxyphen$/i) {
@@ -209,10 +208,16 @@ sub insecticide_term {
     when (/^malathion$/i) {
       return ('malathion', 'MIRO','10000065')
     }
-    when (/^cypermeth?rin$/i) {
+    when (/^cypermethrin$/i) {
       return ('cypermethrin', 'MIRO', '10000127')
     }
-    when (/^deltameth?rin$/i) {
+    when (/^cypermetrin$/i) {
+      return ('cypermethrin', 'MIRO', '10000127')
+    }
+    when (/^deltamethrin$/i) {
+      return ('deltamethrin', 'MIRO', '10000133')
+    }
+    when (/^deltametrin$/i) {
       return ('deltamethrin', 'MIRO', '10000133')
     }
     when (/^temephos$/i) {
@@ -233,33 +238,14 @@ sub insecticide_term {
     when (/^bendiocarb$/i) {
       return ('bendiocarb', 'MIRO', '10000006')
     }
-    when (/^permeth?rin$/i) {
+    when (/^permethrin$/i) {
+      return ('permethrin', 'MIRO', '10000144')
+    }
+    when (/^permetrin$/i) {
       return ('permethrin', 'MIRO', '10000144')
     }
     default {
 die "fatal error: unknown insecticide >$input<\n";
-    }
-  }
-}
-
-sub duration_and_units {
-  my $input = shift;
-  my $input =~ /(\d+)\s*(\w+)/;
-  given ($input) {
-    when (/^24 ?hs$/i) {
-      return ('24', 'hour', 'UO', '0000032')
-    }
-    when (/^30 ?min$/i) {
-      return ('30', 'minute', 'UO', '0000031')
-    }
-    when (/^60 ?min$/i) {
-      return ('60', 'minute', 'UO', '0000031')
-    }
-    when (/^45 ?min$/i) {
-      return ('45', 'minute', 'UO', '0000031')
-    }
-    default {
-die "missing unit abbreviation in '$input' duration" unless (defined $unit_abbreviation);
     }
   }
 }
