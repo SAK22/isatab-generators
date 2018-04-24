@@ -13,6 +13,7 @@
 use strict;
 use warnings;
 use feature "switch";
+use utf8::all;
 
 use Text::CSV::Hashify;
 use Getopt::Long;
@@ -54,7 +55,7 @@ die "can't make output directory: $outdir\n" unless (-d $outdir);
 #
 #
 
-my @s_samples = ( ['Source Name', 'Sample Name', 'Description','Material Type', 'Term Source Ref', 'Term Accession Number', 'Characteristics [sex (EFO:0000695)]', 'Term Source Ref', 'Term Accession Number', 'Characteristics [developmental stage (EFO:0000399)]', 'Term Source Ref', 'Term Accession Number', 'Characteristics [sample size (VBcv:0000983)]' ] );
+my @s_samples = ( ['Source Name', 'Sample Name', 'Description','Material Type', 'Term Source Ref', 'Term Accession Number', 'Characteristics [sex (EFO:0000695)]', 'Term Source Ref', 'Term Accession Number', 'Characteristics [developmental stage (EFO:0000399)]', 'Term Source Ref', 'Term Accession Number' ] );
 
 
 my @a_species = ( [ 'Sample Name', 'Assay Name', 'Description', 'Protocol REF', 'Characteristics [species assay result (VBcv:0000961)]', 'Term Source Ref', 'Term Accession Number' ] );
@@ -113,8 +114,6 @@ foreach my $filename (glob "$indir/*.{txt,tsv}") {
 
     # create collection assay name
     #To make my assay names for collection
-    my $duration_and_units = $row->{"Duration"} =~ /(\d+)\s*(\w+)/;
-    my $dt_sample_size = $row->{"No. Mosquitoes"}/2;
     my $assay_protocol_ref = assay_protocol_ref( $row->{"Protocol"} );
     my $collection_protocol_ref = 'COLL_OVI';
     my $collection_date = $row->{"Collection date"};
@@ -125,9 +124,23 @@ foreach my $filename (glob "$indir/*.{txt,tsv}") {
 
     push @a_collection, [ $sample_name, $a_collection_assay_name, $collection_protocol_ref, "$collection_date-11/$collection_date-12", 'Brazil', 'GAZ', '00002828', $row->{'Coordinates lat'}, $row->{'Coordinates long'}, 'IA', $row->{'Collection site'}, 'Brazil' ];
 
-    push @s_samples, [ $row->{"Source of the data"}, $sample_name, '', 'pool', 'EFO', '0000663', 'female', 'PATO', '0000383', dev_stage($row->{"Mosquitoes tested"}), $dt_sample_size ];
+    push @s_samples, [ $row->{"Source of the data"}, $sample_name, '', 'pool', 'EFO', '0000663', 'female', 'PATO', '0000383', dev_stage($row->{"Mosquitoes tested"}) ];
 
-    push @a_IR_WHO, [ $sample_name, $a_who_dt_assay_name, $assay_protocol_ref, insecticide_term($row->{"Insecticide"}), $row->{"Concentration"}, 'percent', 'UO', '0000187', $duration_and_units, $dt_sample_size, 'p_IR_WHO.txt' ];
+
+    my $num_mozzies_total = $row->{"No. Mosquitoes"};
+    if (length($num_mozzies_total) > 0 &&
+	!looks_like_number($num_mozzies_total)) {
+      die "didn't like num mozzies >$num_mozzies_total<\n";
+    }
+    # so $num_mozzies_total could still be empty string
+
+    my $num_mozzies_WHO = $num_mozzies_total;
+    if ($row->{"Mosquitoes tested"} =~ /^.+larvae$/) {
+      die "need to half the num mozzie total >$num_mozzies_total<\n";
+    }
+    # TO DO - decide if all or some mozzies are used in the WHO assay
+
+push @a_IR_WHO, [ $sample_name, $a_who_dt_assay_name, $assay_protocol_ref, insecticide_term($row->{"Insecticide"}), $row->{"Concentration"}, concentration_unit_term( $row->{"Units"}), duration_and_units($row->{"Duration"}), $num_mozzies_WHO, 'p_IR_WHO.txt' ];
 
     push @p_IR_WHO, [ $a_who_dt_assay_name, "Mortality percentage:$row->{'Percent mortality'},$row->{'Concentration'}% insecticide_term($row->{'Insecticide'})", 'insecticide resistance', 'MIRO', '00000021', 'mortality rate', 'VBcv', '0000703', 'IA', $row->{"Percent mortality"}, 'percent', 'UO', '0000187'];
   }
@@ -177,7 +190,7 @@ sub dev_stage {
       return ('adult laboratory population', 'MIRO', '30000003')
     }
     default {
-die "fatal error: unknown dev_stage >$input<\n";
+      die "fatal error: unknown dev_stage >$input<\n";
     }
   }
 }
@@ -195,7 +208,37 @@ sub assay_protocol_ref {
       return ('IR_CDC_BOTTLE')
     }
     default {
-die "fatal error: unknown who_protocol_ref >$input<\n";
+      die "fatal error: unknown who_protocol_ref >$input<\n";
+    }
+  }
+}
+sub num_mozzies {
+  my $input = shift;
+  if (looks_like_number($input)) {
+    return $input;
+  }else{
+    when (/^$/i) {
+      die "unexpected value '$input' for num_mozzies";
+    }
+  }
+}
+sub concentration_unit_term {
+  my $input = shift;
+  given ($input) {
+    when ("mg/L") {
+      return ('mg/L', 'UO', '0000273')
+    }
+    when (" mg i.a./m2") {
+      return ('milligram per square meter', 'UO', '0000309')
+    }
+    when (/^%$/i) {
+      return ('percent', 'UO', '0000187')
+    }
+   when (/^µg$/i) {
+      return ('microgram', 'UO', '0000023')
+    }
+    default {
+      die "fatal error: unknown concentration_unit_term >$input<\n";
     }
   }
 }
@@ -237,29 +280,30 @@ sub insecticide_term {
       return ('permethrin', 'MIRO', '10000144')
     }
     default {
-die "fatal error: unknown insecticide >$input<\n";
+      die "fatal error: unknown insecticide >$input<\n";
     }
   }
 }
 
 sub duration_and_units {
   my $input = shift;
-  my $input =~ /(\d+)\s*(\w+)/;
   given ($input) {
-    when (/^24 ?hs$/i) {
-      return ('24', 'hour', 'UO', '0000032')
+    when ("adult emergence on control") {
+      return ('', '', '', '');
     }
-    when (/^30 ?min$/i) {
-      return ('30', 'minute', 'UO', '0000031')
+  }
+
+  my ($duration_amount,$duration_unit) = $input =~ /(\d+)\s*(\w+)/;
+  die "unrecognised format in duration_and_units >$input<\n" unless (defined $duration_unit);
+  given ($duration_unit) {
+    when (/^hs$/i) {
+      return ($duration_amount, 'hour', 'UO', '0000032')
     }
-    when (/^60 ?min$/i) {
-      return ('60', 'minute', 'UO', '0000031')
-    }
-    when (/^45 ?min$/i) {
-      return ('45', 'minute', 'UO', '0000031')
+    when (/^min$/i) {
+      return ($duration_amount, 'minute', 'UO', '0000031')
     }
     default {
-die "missing unit abbreviation in '$input' duration" unless (defined $unit_abbreviation);
+      die "missing unit abbreviation in '$input' duration" unless (defined $duration_unit);
     }
   }
 }
