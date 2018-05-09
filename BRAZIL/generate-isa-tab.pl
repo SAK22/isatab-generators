@@ -171,11 +171,12 @@ foreach my $filename (glob "$indir/*.{txt,tsv}") {
       push @a_dose_response, [ $sample_name, $a_dr_assay_name, $assay_protocol_ref, @insecticide_term, duration_and_units($row->{"Duration"}), $num_mozzies, 'IA', 'p_dose-response.txt'];
 
       push @p_dose_response, [ $a_dr_assay_name, "LC50: $lc50 $concentration_unit_term[0] $insecticide_term[0]", 'resistance to single insecticide', 'MIRO', '00000021', 'LC50', 'VBcv', '0000726', 'IC', $row->{'LC 50'}, @concentration_unit_term ];
-
-      push @p_dose_response, [ $a_dr_assay_name, "LC95: $lc95 $concentration_unit_term[0] $insecticide_term[0]", 'resistance to single insecticide', 'MIRO', '00000021', 'LC95', 'VBcv', '0000728', 'IC', $row->{'LC 95'}, @concentration_unit_term ];
-
-      push @p_dose_response, [ $a_dr_assay_name, "LC99: $lc99 $concentration_unit_term[0] $insecticide_term[0]", 'resistance to single insecticide', 'MIRO', '00000021', 'LC99', 'VBcv', '0000729', 'IC', $row->{'LC 99'}, @concentration_unit_term ];
-
+      if (defined $lc95 && length($lc95) > 0 && looks_like_number($lc95)) {
+	push @p_dose_response, [ $a_dr_assay_name, "LC95: $lc95 $concentration_unit_term[0] $insecticide_term[0]", 'resistance to single insecticide', 'MIRO', '00000021', 'LC95', 'VBcv', '0000728', 'IC', $row->{'LC 95'}, @concentration_unit_term ];
+      }
+      if (defined $lc99 && length($lc99) > 0 && looks_like_number($lc99)) {
+	push @p_dose_response, [ $a_dr_assay_name, "LC99: $lc99 $concentration_unit_term[0] $insecticide_term[0]", 'resistance to single insecticide', 'MIRO', '00000021', 'LC99', 'VBcv', '0000729', 'IC', $row->{'LC 99'}, @concentration_unit_term ];
+      }
     }
   }
 }
@@ -198,10 +199,10 @@ sub dev_stage {
   my $input = shift;
   given ($input) {
     when (/^f1 ?- ?larvae$/i) {
-      return ('F1 larvae bred from field collected mosquitoes', 'MIRO', '30000030')
+      return ('F1 larvae emerged from field collected eggs', 'IRO', '0000132')
     }
     when (/^f1 ?- ?adult$/i) {
-      return ('F1 larvae from field collected mosquitoes', 'MIRO', '30000031')
+      return ('F1 adults emerged from field collected eggs', 'IRO', '0000134')
     }
     when (/^Lab ?- ?larvae$/i) {
       return ('larval laboratory population', 'MIRO', '30000001')
@@ -342,8 +343,8 @@ sub insecticide_term {
 sub duration_and_units {
   my $input = shift;
   given ($input) {
-    when ("adult emergence on control") {
-      return ('', '', '', '');
+    when (/^adult emergence on control$/i) {
+      return ('8', 'day', 'UO', '0000033');
     }
   }
 
